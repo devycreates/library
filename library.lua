@@ -227,7 +227,6 @@ local distance = 10
 local hitboxSize = Vector3.new(distance, distance, distance)
 local hitboxColor = Color3.fromRGB(0, 255, 255)
 shared.Mags = false
-local magnetsEnabled = false
 
 sections.mag1:Slider({
     Name = "Magnet Distance",
@@ -239,7 +238,6 @@ sections.mag1:Slider({
     Callback = function(value)
         distance = value
         hitboxSize = Vector3.new(value, value, value)
-        print("Magnet Distance changed to " .. value)
     end
 }, "MagnetDistance")
 
@@ -255,28 +253,58 @@ sections.mag1:Toggle({
     end,
 }, "Magnets")
 
-function magBall(ball)
-    if ball and player.Character then
-        firetouchinterest(player.Character["Left Arm"], ball, distance)
-        firetouchinterest(player.Character["Right Arm"], ball, distance)
-        task.wait()
-        firetouchinterest(player.Character["Left Arm"], ball, distance)
-        firetouchinterest(player.Character["Right Arm"], ball, distance)
+local function moveBall(ball)
+    if ball and player.Character and shared.Mags then
+        local leftArm = player.Character:FindFirstChild("Left Arm")
+        if leftArm then
+            ball.CanCollide = true
+            local startPosition = ball.Position
+            local endPosition = leftArm.Position
+            local direction = (endPosition - startPosition).Unit
+            local distance = (endPosition - startPosition).Magnitude
+            local speed = distance / 3000
+            local startTime = tick()
+
+            runService:BindToRenderStep("MoveBall", Enum.RenderPriority.Camera.Value + 20, function()
+                local elapsedTime = tick() - startTime
+                local t = math.min(elapsedTime / speed, 1)
+                local newPosition = startPosition + direction * distance * t
+                ball.CFrame = CFrame.new(newPosition)
+                if t >= 1 then
+                    runService:UnbindFromRenderStep("MoveBall")
+                    ball.CanCollide = true
+                end
+            end)
+        end
     end
 end
 
+local function isWithinRange(football)
+    local mag = (player.Character.HumanoidRootPart.Position - football.Position).Magnitude
+    return mag <= distance
+end
+
 runService.Stepped:Connect(function()
-    if shared.Mags and not game:GetService("ReplicatedStorage").Values.HomeQB.Value:match(player.Name) and not game:GetService("ReplicatedStorage").Values.AwayQB.Value:match(player.Name) then
-        for _, v in pairs(workspace:GetChildren()) do
-            if v.Name == "Football" and v:IsA("BasePart") then
+    if shared.Mags then
+        local closestBall = nil
+        local closestDist = math.huge
+
+        for _, v in ipairs(workspace:GetChildren()) do
+            if v.Name == "Football" and v:IsA("BasePart") and isWithinRange(v) then
                 local mag = (player.Character.HumanoidRootPart.Position - v.Position).Magnitude
-                if mag <= distance then
-                    magBall(v)
+                if mag < closestDist then
+                    closestBall = v
+                    closestDist = mag
                 end
             end
         end
+
+        if closestBall then
+            moveBall(closestBall)
+        end
     end
 end)
+
 
 sections.mag1:Colorpicker({
     Name = "Hitbox Colorpicker",
