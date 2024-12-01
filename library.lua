@@ -225,7 +225,6 @@ sections.mag1:Header({
 
 local distance = 10
 local hitboxSize = Vector3.new(distance, distance, distance)
-local hitboxColor = Color3.fromRGB(0, 255, 255)
 shared.Mags = false
 
 sections.mag1:Slider({
@@ -234,7 +233,7 @@ sections.mag1:Slider({
     Minimum = 0,
     Maximum = 25,
     DisplayMethod = "Value",
-    Precision = 0,
+    Precision = 1,
     Callback = function(value)
         distance = value
         hitboxSize = Vector3.new(value, value, value)
@@ -257,7 +256,7 @@ local function moveBall(ball)
     if ball and player.Character and shared.Mags then
         local leftArm = player.Character:FindFirstChild("Left Arm")
         if leftArm then
-            ball.CanCollide = true
+            ball.CanCollide = false
             local startPosition = ball.Position
             local endPosition = leftArm.Position
             local direction = (endPosition - startPosition).Unit
@@ -306,17 +305,28 @@ runService.Stepped:Connect(function()
 end)
 
 
-sections.mag1:Colorpicker({
-    Name = "Hitbox Colorpicker",
-    Default = Color3.fromRGB(0, 255, 255),
-    Callback = function(color)
+local hitboxColor = Color3.fromRGB(255, 0, 0)
+
+local alphaColorPicker = sections.mag3:Colorpicker({
+    Name = "Transparency Colorpicker",
+    Default = Color3.fromRGB(255, 0, 0),
+    Alpha = 0,
+    Callback = function(color, alpha)
         hitboxColor = color
-        Window:Notify({
-            Title = Window.Settings.Title,
-            Description = "Color set to: " .. tostring(color)
-        })
+        if shared.Mags then
+            for _, v in pairs(workspace:GetChildren()) do
+                if v.Name == "Football" and v:IsA("BasePart") then
+                    local hitbox = v:FindFirstChild("MagnetHitbox")
+                    if hitbox then
+                        hitbox.Color = hitboxColor
+                    end
+                end
+            end
+        end
     end,
-}, "HitboxColorpicker")
+}, "TransparencyColorpicker")
+
+
 
 sections.mag1:Toggle({
     Name = "View Mag Hitbox",
@@ -372,13 +382,39 @@ sections.mag1:Toggle({
     end
 }, "ViewMagHitbox")
 
-sections.mag2:Toggle({
-    Name = "Increase Arm Length",
+local player = game.Players.LocalPlayer
+
+local function updateArms(size)
+    if player.Character:FindFirstChild('Left Arm') and player.Character:FindFirstChild('Right Arm') then
+        player.Character['Left Arm'].Size = Vector3.new(size, size * 2, size)
+        player.Character['Right Arm'].Size = Vector3.new(size, size * 2, size)
+        player.Character['Left Arm'].Transparency = 0.5
+        player.Character['Right Arm'].Transparency = 0.5
+    end
+end
+
+sections.mag1:Slider({
+    Name = "Arm Size",
+    Default = 2,
+    Minimum = 1,
+    Maximum = 5,
+    DisplayMethod = "Value",
+    Precision = 1,
+    Callback = function(value)
+        _G.ArmSize = value
+        if _G.ArmResizerEnabled then
+            updateArms(_G.ArmSize)
+        end
+    end,
+}, "ArmSize")
+
+sections.mag1:Toggle({
+    Name = "Arm Resizer",
     Default = false,
     Callback = function(enabled)
-        _G.CheckingTool = enabled
+        _G.ArmResizerEnabled = enabled
         if enabled then
-            updateArms()
+            updateArms(_G.ArmSize or 2)
         else
             if player.Character:FindFirstChild('Left Arm') and player.Character:FindFirstChild('Right Arm') then
                 player.Character['Left Arm'].Size = Vector3.new(1, 2, 1)
@@ -388,31 +424,8 @@ sections.mag2:Toggle({
             end
         end
     end,
-}, "IncreaseArmLength")
+}, "ArmResizer")
 
-local function updateArms()
-    if player.Character:FindFirstChild('Left Arm') and player.Character:FindFirstChild('Right Arm') then
-        player.Character['Left Arm'].Size = Vector3.new(2, 4, 2)
-        player.Character['Right Arm'].Size = Vector3.new(2, 4, 2)
-        player.Character['Left Arm'].Transparency = 0.5
-        player.Character['Right Arm'].Transparency = 0.5
-    end
-end
-
-sections.mag2:Slider({
-    Name = "Arm Size",
-    Default = 3,
-    Minimum = 0,
-    Maximum = 20,
-    DisplayMethod = "Value",
-    Precision = 1,
-    Callback = function(value)
-        _G.Arms = value
-        if _G.CheckingTool then
-            updateArms()
-        end
-    end,
-}, "ArmSize")
 
 local Workspace = game:GetService("Workspace")
 local distance2 = 3
