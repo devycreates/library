@@ -372,6 +372,86 @@ sections.mag1:Toggle({
     end
 }, "ViewMagHitbox")
 
+sections.mag2:Toggle({
+    Name = "Increase Arm Length",
+    Default = false,
+    Callback = function(enabled)
+        _G.CheckingTool = enabled
+        if enabled then
+            updateArms()
+        else
+            if player.Character:FindFirstChild('Left Arm') and player.Character:FindFirstChild('Right Arm') then
+                player.Character['Left Arm'].Size = Vector3.new(1, 2, 1)
+                player.Character['Right Arm'].Size = Vector3.new(1, 2, 1)
+                player.Character['Left Arm'].Transparency = 0
+                player.Character['Right Arm'].Transparency = 0
+            end
+        end
+    end,
+}, "IncreaseArmLength")
+
+local function updateArms()
+    if player.Character:FindFirstChild('Left Arm') and player.Character:FindFirstChild('Right Arm') then
+        player.Character['Left Arm'].Size = Vector3.new(2, 4, 2)
+        player.Character['Right Arm'].Size = Vector3.new(2, 4, 2)
+        player.Character['Left Arm'].Transparency = 0.5
+        player.Character['Right Arm'].Transparency = 0.5
+    end
+end
+
+sections.mag2:Slider({
+    Name = "Arm Size",
+    Default = 3,
+    Minimum = 0,
+    Maximum = 20,
+    DisplayMethod = "Value",
+    Precision = 1,
+    Callback = function(value)
+        _G.Arms = value
+        if _G.CheckingTool then
+            updateArms()
+        end
+    end,
+}, "ArmSize")
+
+local Workspace = game:GetService("Workspace")
+local distance2 = 3
+
+sections.mag3:Toggle({
+    Name = "Ball Resize",
+    Default = false,
+    Callback = function(enabled)
+        _G.BallResize = enabled
+        if enabled then
+            Workspace.ChildAdded:Connect(function(Child)
+                if Child:IsA("BasePart") and Child.Name == "Football" then
+                    Child.Size = Vector3.new(distance2, distance2, distance2)
+                    Child.CanCollide = false
+                end
+            end)
+        end
+    end,
+}, "BallResize")
+
+sections.mag3:Slider({
+    Name = "Ball Size",
+    Default = 3,
+    Minimum = 0,
+    Maximum = 20,
+    DisplayMethod = "Value",
+    Precision = 1,
+    Callback = function(value)
+        distance = value
+        if _G.BallResize then
+            for _, v in pairs(Workspace:GetChildren()) do
+                if v:IsA("BasePart") and v.Name == "Football" then
+                    v.Size = Vector3.new(distance, distance, distance)
+                    v.CanCollide = false
+                end
+            end
+        end
+    end,
+}, "BallSize")
 
 sections.physic1:Keybind({
     Name = "Quick TP",
