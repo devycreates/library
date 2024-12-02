@@ -592,7 +592,6 @@ userInputService.InputBegan:Connect(function(input, gp)
     tpforward()
 end)
 
-
 sections.physic1:Toggle({
     Name = "Mobile Quick TP",
     Default = false,
@@ -606,66 +605,73 @@ sections.physic1:Toggle({
 
         if Toggle then
             local ScreenGui = Instance.new("ScreenGui")
-local TextButton = Instance.new("TextButton")
-local UICorner = Instance.new("UICorner")
+            local TextButton = Instance.new("TextButton")
+            local UICorner = Instance.new("UICorner")
 
-ScreenGui.Parent = player:WaitForChild("PlayerGui")
-ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+            ScreenGui.Parent = player:WaitForChild("PlayerGui")
+            ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
-TextButton.Parent = ScreenGui
-TextButton.BackgroundColor3 = Color3.new(0, 0, 0)
-TextButton.BackgroundTransparency = 0.5
-TextButton.BorderColor3 = Color3.fromRGB(0, 0, 0)
-TextButton.BorderSizePixel = 0
-TextButton.Position = UDim2.new(0.47683534, 0, 0.461152881, 0)
-TextButton.Size = UDim2.new(0, 65, 0, 62)
-TextButton.Font = Enum.Font.GothamBold
-TextButton.Text = "teleport"
-TextButton.TextColor3 = Color3.new(0.8314, 0.8314, 0.8314)
-TextButton.TextSize = 17.000
+            TextButton.Parent = ScreenGui
+            TextButton.BackgroundColor3 = Color3.new(0, 0, 0)
+            TextButton.BackgroundTransparency = 0.5
+            TextButton.BorderColor3 = Color3.fromRGB(0, 0, 0)
+            TextButton.BorderSizePixel = 0
+            TextButton.Position = UDim2.new(0.47683534, 0, 0.461152881, 0)
+            TextButton.Size = UDim2.new(0, 65, 0, 62)
+            TextButton.Font = Enum.Font.GothamBold
+            TextButton.Text = "teleport"
+            TextButton.TextColor3 = Color3.new(0.8314, 0.8314, 0.8314)
+            TextButton.TextSize = 17.000
 
-UICorner.Parent = TextButton
+            UICorner.Parent = TextButton
 
-local function dragify(button)
-    local dragging, dragInput, dragStart, startPos
+            local function dragify(button)
+                local dragging, dragInput, dragStart, startPos
 
-    local function update(input)
-        local delta = input.Position - dragStart
-        button.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-    end
-
-    button.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            dragging = true
-            dragStart = input.Position
-            startPos = button.Position
-
-            input.Changed:Connect(function()
-                if input.UserInputState == Enum.UserInputState.End then
-                    dragging = false
+                local function update(input)
+                    local delta = input.Position - dragStart
+                    button.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
                 end
-            end)
+
+                button.InputBegan:Connect(function(input)
+                    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                        dragging = true
+                        dragStart = input.Position
+                        startPos = button.Position
+
+                        input.Changed:Connect(function()
+                            if input.UserInputState == Enum.UserInputState.End then
+                                dragging = false
+                            end
+                        end)
+                    end
+                end)
+
+                button.InputChanged:Connect(function(input)
+                    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+                        dragInput = input
+                    end
+                end)
+
+                userInputService.InputChanged:Connect(function(input)
+                    if dragging and input == dragInput then
+                        update(input)
+                    end
+                end)
+            end
+
+            dragify(TextButton)
+
+            TextButton.MouseButton1Click:Connect(tpforward)
+        else
+            local existingGui = player.PlayerGui:FindFirstChild("ScreenGui")
+            if existingGui then
+                existingGui:Destroy()
+            end
         end
-    end)
-
-    button.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-            dragInput = input
-        end
-    end)
-
-    userInputService.InputChanged:Connect(function(input)
-        if dragging and input == dragInput then
-            update(input)
-        end
-    end)
-end
-
-dragify(TextButton)
-
-TextButton.MouseButton1Click:Connect(tpforward)
-
+    end
 }, "MobileQuickTP")
+
 
 sections.physic2:Toggle({
     Name = "Anti Block",
