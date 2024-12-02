@@ -550,6 +550,38 @@ sections.mag1:Slider({
     end
 }, "MagnetDelay")
 
+
+local alphaColorPicker = sections.mag3:Colorpicker({
+	Name = "Transparency Colorpicker",
+	Default = Color3.fromRGB(255,0,0),
+	Alpha = 0,
+	Callback = function(color, alpha)
+		print("Color: ", color, " Alpha: ", alpha)
+	end,
+}, "TransparencyColorpicker")
+
+local rainbowActive
+local rainbowConnection
+local hue = 0
+
+sections.mag3:Toggle({
+	Name = "Rainbow",
+	Default = false,
+	Callback = function(value)
+		rainbowActive = value
+
+		if rainbowActive then
+			rainbowConnection = game:GetService("RunService").RenderStepped:Connect(function(deltaTime)
+				hue = (hue + deltaTime * 0.1) % 1
+				alphaColorPicker:SetColor(Color3.fromHSV(hue, 1, 1))
+			end)
+		elseif rainbowConnection then
+			rainbowConnection:Disconnect()
+			rainbowConnection = nil
+		end
+	end,
+}, "RainbowToggle")
+
 sections.physic1:Keybind({
     Name = "Quick TP",
     Blacklist = false,
@@ -745,42 +777,6 @@ if not IS_PRACTICE then
         boundaries[#boundaries + 1] = part
     end
 end
-
-
-local alphaColorPicker = sections.mag3:Colorpicker({
-	Name = "Transparency Colorpicker",
-	Default = Color3.fromRGB(255,0,0),
-	Alpha = 0,
-	Callback = function(color, alpha)
-		print("Color: ", color, " Alpha: ", alpha)
-	end,
-}, "TransparencyColorpicker")
-
-local rainbowActive
-local rainbowConnection
-local hue = 0
-
-sections.mag3:Toggle({
-	Name = "Rainbow",
-	Default = false,
-	Callback = function(value)
-		rainbowActive = value
-
-		if rainbowActive then
-			rainbowConnection = game:GetService("RunService").RenderStepped:Connect(function(deltaTime)
-				hue = (hue + deltaTime * 0.1) % 1
-				alphaColorPicker:SetColor(Color3.fromHSV(hue, 1, 1))
-			end)
-		elseif rainbowConnection then
-			rainbowConnection:Disconnect()
-			rainbowConnection = nil
-		end
-	end,
-}, "RainbowToggle")
-
-
-
-
 
 MacLib:SetFolder("Maclib")
 tabs.Settings:InsertConfigSection("Left")
