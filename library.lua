@@ -222,10 +222,135 @@ sections.mag1:Header({
 	Name = "Magnets"
 })
 
-
-local distance = 10
+local catching = false
+local magnetenabled = false
+local cdistance = 10
+local tdistance = 10
+local cdelay = 0
 local hitboxSize = Vector3.new(distance, distance, distance)
-shared.Mags = false
+local hitboxColor = Color3.fromRGB(255, 0, 0)
+
+local function isCharacterSitting(character)
+    if character and character:FindFirstChildOfClass("Humanoid") then
+        return character.Humanoid.Sit
+    end
+    return false
+end
+
+local function adjustHandSizes(character, distance)
+    local catchRight = character:FindFirstChild("CatchRight")
+    local catchLeft = character:FindFirstChild("CatchLeft")
+    if catchRight and catchLeft then
+        local newSize = Vector3.new(distance, distance, distance)
+        if catchRight.Size ~= newSize then
+            catchRight.Size = newSize
+        end
+        if catchLeft.Size ~= newSize then
+            catchLeft.Size = newSize
+        end
+    end
+end
+
+local function attachBallToHand(hand, ball)
+    if hand and ball then
+        ball.CFrame = hand.CFrame
+    end
+end
+
+local function waitForChildOfClass(parent, className, timeout)
+    timeout = timeout or TIMEOUT
+    local startTime = tick()
+    while tick() - startTime < timeout do
+        local child = parent:FindFirstChildOfClass(className)
+        if child then
+            return child
+        end
+        task.wait()
+    end
+    return nil
+end
+
+local function findNearestBall(character)
+    local nearestBall = nil
+    local nearestDistance = cdistance
+
+    for _, child in pairs(workspace:GetChildren()) do
+        if child.Name == "Football" then
+            local distance = (child.Position - character.HumanoidRootPart.Position).Magnitude
+            if distance < nearestDistance then
+                nearestDistance = distance
+                nearestBall = child
+            end
+        end
+    end
+
+    return nearestBall
+end
+
+local function startMagnet(reach)
+    magnetenabled = true
+    catching = true
+    tdistance = reach
+
+    RunService.Heartbeat:Connect(function()
+        if not catching then return end
+
+        local character = LocalPlayer.Character
+        if character and not isCharacterSitting(character) then
+            local nearestBall = findNearestBall(character)
+            if nearestBall then
+                adjustHandSizes(character, tdistance)
+                attachBallToHand(character:FindFirstChild("CatchRight"), nearestBall)
+                attachBallToHand(character:FindFirstChild("CatchLeft"), nearestBall)
+            end
+        end
+    end)
+end
+
+local function stopMagnet()
+    magnetenabled = false
+    catching = false
+
+    local character = LocalPlayer.Character
+    if character and character:FindFirstChild("CatchRight") and character:FindFirstChild("CatchLeft") then
+        character.CatchRight.Size = Vector3.new(1, 1, 1)
+        character.CatchLeft.Size = Vector3.new(1, 1, 1)
+    end
+end
+
+Mouse.Button1Down:Connect(function()
+    if not magnetenabled then return end
+
+    local character = LocalPlayer.Character
+    if character and not isCharacterSitting(character) then
+        local nearestBall = findNearestBall(character)
+        if nearestBall and waitForChildOfClass(nearestBall, "TouchTransmitter", timeout) then
+            adjustHandSizes(character, tdistance)
+
+            task.wait(cdelay)
+            attachBallToHand(character:FindFirstChild("CatchRight"), nearestBall)
+            attachBallToHand(character:FindFirstChild("CatchLeft"), nearestBall)
+        end
+        catching = false
+    end
+end)
+
+sections.mag1:Toggle({
+    Name = "Magnets",
+    Default = false,
+    Callback = function(value)
+      magnetenabled = value
+        Window:Notify({
+            Title = Window.Settings.Title,
+            Description = (value and "Enabled " or "Disabled ") .. "Magnets"
+        })
+        if value then
+            startMagnet(distance)
+        else
+            stopMagnet()
+        end
+    end,
+}, "Magnets")
 
 sections.mag1:Slider({
     Name = "Magnet Distance",
@@ -233,82 +358,17 @@ sections.mag1:Slider({
     Minimum = 0,
     Maximum = 25,
     DisplayMethod = "Value",
-    Precision = 1,
+    Precision = 0,
     Callback = function(value)
-        distance = value
         hitboxSize = Vector3.new(value, value, value)
+        if magnetenabled then
+            tdistance = value
+        end
     end
 }, "MagnetDistance")
 
-sections.mag1:Toggle({
-    Name = "Magnets",
-    Default = false,
-    Callback = function(value)
-        shared.Mags = value
-        Window:Notify({
-            Title = Window.Settings.Title,
-            Description = (value and "Enabled " or "Disabled ") .. "Magnets"
-        })
-    end,
-}, "Magnets")
-
-local function moveBall(ball)
-    if ball and player.Character and shared.Mags then
-        local leftArm = player.Character:FindFirstChild("Left Arm")
-        if leftArm then
-            ball.CanCollide = false
-            local startPosition = ball.Position
-            local endPosition = leftArm.Position
-            local direction = (endPosition - startPosition).Unit
-            local distance = (endPosition - startPosition).Magnitude
-            local speed = distance / 3000
-            local startTime = tick()
-
-            runService:BindToRenderStep("MoveBall", Enum.RenderPriority.Camera.Value + 20, function()
-                local elapsedTime = tick() - startTime
-                local t = math.min(elapsedTime / speed, 1)
-                local newPosition = startPosition + direction * distance * t
-                ball.CFrame = CFrame.new(newPosition)
-                if t >= 1 then
-                    runService:UnbindFromRenderStep("MoveBall")
-                    ball.CanCollide = true
-                end
-            end)
-        end
-    end
-end
-
-local function isWithinRange(football)
-    local mag = (player.Character.HumanoidRootPart.Position - football.Position).Magnitude
-    return mag <= distance
-end
-
-runService.Stepped:Connect(function()
-    if shared.Mags then
-        local closestBall = nil
-        local closestDist = math.huge
-
-        for _, v in ipairs(workspace:GetChildren()) do
-            if v.Name == "Football" and v:IsA("BasePart") and isWithinRange(v) then
-                local mag = (player.Character.HumanoidRootPart.Position - v.Position).Magnitude
-                if mag < closestDist then
-                    closestBall = v
-                    closestDist = mag
-                end
-            end
-        end
-
-        if closestBall then
-            moveBall(closestBall)
-        end
-    end
-end)
-
-
-local hitboxColor = Color3.fromRGB(255, 0, 0)
-
 local alphaColorPicker = sections.mag3:Colorpicker({
-    Name = "Transparency Colorpicker",
+    Name = "Hitbox Colorpicker",
     Default = Color3.fromRGB(255, 0, 0),
     Alpha = 0,
     Callback = function(color, alpha)
@@ -393,7 +453,7 @@ local function updateArms(size)
     end
 end
 
-sections.mag1:Slider({
+sections.mag2:Slider({
     Name = "Arm Size",
     Default = 2,
     Minimum = 1,
@@ -408,7 +468,7 @@ sections.mag1:Slider({
     end,
 }, "ArmSize")
 
-sections.mag1:Toggle({
+sections.mag2:Toggle({
     Name = "Arm Resizer",
     Default = false,
     Callback = function(enabled)
@@ -466,6 +526,30 @@ sections.mag3:Slider({
     end,
 }, "BallSize")
 
+sections.mag2:Toggle({
+    Name = "Magnet Activation Delay",
+    Default = false,
+    Callback = function(value)
+        if value then
+            cdelay = 0
+        else
+            cdelay = 0
+        end
+    end,
+}, "MagnetActivationDelay")
+
+sections.mag1:Slider({
+    Name = "Magnet Delay",
+    Default = 0,
+    Minimum = 0,
+    Maximum = 5,
+    DisplayMethod = "Value",
+    Precision = 1,
+    Callback = function(value)
+        cdelay = value
+    end
+}, "MagnetDelay")
+
 sections.physic1:Keybind({
     Name = "Quick TP",
     Blacklist = false,
@@ -485,24 +569,27 @@ sections.physic1:Keybind({
     end,
 }, "QuickTPBind")
 
-local quickTPCooldown = os.clock()
-local tpDistance = 2
+local userInputService = game:GetService("UserInputService")
+local quicktpcooldown = os.clock()
+local tpdistance = 2
 
-userInputService.InputBegan:Connect(function(input, gp)
-    if gp then return end
-    if input.KeyCode ~= QuickTPBind.Value then return end
-
+local function tpforward()
     local character = player.Character
     local humanoidRootPart = character and character:FindFirstChild("HumanoidRootPart")
     local humanoid = character and character:FindFirstChild("Humanoid")
 
-    if not quickTP.Value then return end
     if not character or not humanoidRootPart or not humanoid then return end
     if (os.clock() - quickTPCooldown) < 0.1 then return end
 
     local speed = 2 + (tpDistance / 4)
     humanoidRootPart.CFrame += humanoid.MoveDirection * speed
     quickTPCooldown = os.clock()
+end
+
+userInputService.InputBegan:Connect(function(input, gp)
+    if gp then return end
+    if input.KeyCode ~= QuickTPBind.Value then return end
+    tpforward()
 end)
 
 
@@ -518,105 +605,66 @@ sections.physic1:Toggle({
         })
 
         if Toggle then
-            local userInputService = game:GetService("UserInputService")
-            local TweenService = game:GetService("TweenService")
-
             local ScreenGui = Instance.new("ScreenGui")
-            local TextButton = Instance.new("TextButton")
-            local UICorner = Instance.new("UICorner")
-            local BorderFrame = Instance.new("Frame")
-            local BorderUICorner = Instance.new("UICorner")
+local TextButton = Instance.new("TextButton")
+local UICorner = Instance.new("UICorner")
 
-            ScreenGui.Parent = player:WaitForChild("PlayerGui")
-            ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+ScreenGui.Parent = player:WaitForChild("PlayerGui")
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
-            BorderFrame.Size = UDim2.new(0, 71, 0, 68)
-            BorderFrame.Position = UDim2.new(0.47683534, -3, 0.461152881, -3)
-            BorderFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-            BorderFrame.BorderSizePixel = 0
-            BorderFrame.Parent = ScreenGui
+TextButton.Parent = ScreenGui
+TextButton.BackgroundColor3 = Color3.new(0, 0, 0)
+TextButton.BackgroundTransparency = 0.5
+TextButton.BorderColor3 = Color3.fromRGB(0, 0, 0)
+TextButton.BorderSizePixel = 0
+TextButton.Position = UDim2.new(0.47683534, 0, 0.461152881, 0)
+TextButton.Size = UDim2.new(0, 65, 0, 62)
+TextButton.Font = Enum.Font.GothamBold
+TextButton.Text = "teleport"
+TextButton.TextColor3 = Color3.new(0.8314, 0.8314, 0.8314)
+TextButton.TextSize = 17.000
 
-            BorderUICorner.CornerRadius = UDim.new(0.5, 0)
-            BorderUICorner.Parent = BorderFrame
+UICorner.Parent = TextButton
 
-            TextButton.Size = UDim2.new(0, 65, 0, 62)
-            TextButton.Position = UDim2.new(0, 3, 0, 3)
-            TextButton.BackgroundColor3 = Color3.new(0.0588, 0.0588, 0.0588)
-            TextButton.BorderColor3 = Color3.fromRGB(0, 0, 0)
-            TextButton.BorderSizePixel = 0
-            TextButton.Font = Enum.Font.SourceSans
-            TextButton.Text = "TP"
-            TextButton.TextColor3 = Color3.new(0.8314, 0.8314, 0.8314)
-            TextButton.TextSize = 17.000
-            TextButton.BackgroundTransparency = 0.76
-            TextButton.Parent = BorderFrame
+local function dragify(button)
+    local dragging, dragInput, dragStart, startPos
 
-            UICorner.CornerRadius = UDim.new(0.5, 0)
-            UICorner.Parent = TextButton
-
-            local function dragify(button)
-                local dragging, dragInput, dragStart, startPos
-
-                local function update(input)
-                    local delta = input.Position - dragStart
-                    button.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-                end
-
-                button.InputBegan:Connect(function(input)
-                    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                        dragging = true
-                        dragStart = input.Position
-                        startPos = button.Position
-
-                        input.Changed:Connect(function()
-                            if input.UserInputState == Enum.UserInputState.End then
-                                dragging = false
-                            end
-                        end)
-                    end
-                end)
-
-                button.InputChanged:Connect(function(input)
-                    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-                        dragInput = input
-                    end
-                end)
-
-                userInputService.InputChanged:Connect(function(input)
-                    if dragging and input == dragInput then
-                        update(input)
-                    end
-                end)
-            end
-
-            dragify(BorderFrame)
-
-            local function teleportForward()
-                local character = player.Character
-                if character and character:FindFirstChild("HumanoidRootPart") then
-                    local humanoidRootPart = character.HumanoidRootPart
-                    humanoidRootPart.CFrame = humanoidRootPart.CFrame + humanoidRootPart.CFrame.LookVector * tpDistance
-                end
-            end
-
-            TextButton.MouseButton1Click:Connect(teleportForward)
-
-            local function animateBorder()
-                while true do
-                    local tween1 = TweenService:Create(BorderFrame, TweenInfo.new(1), {BackgroundColor3 = Color3.fromRGB(255, 255, 255)})
-                    local tween2 = TweenService:Create(BorderFrame, TweenInfo.new(1), {BackgroundColor3 = Color3.fromRGB(0, 0, 0)})
-
-                    tween1:Play()
-                    tween1.Completed:Wait()
-
-                    tween2:Play()
-                    tween2.Completed:Wait()
-                end
-            end
-
-            task.spawn(animateBorder)
-        end
+    local function update(input)
+        local delta = input.Position - dragStart
+        button.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
     end
+
+    button.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = button.Position
+
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
+
+    button.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            dragInput = input
+        end
+    end)
+
+    userInputService.InputChanged:Connect(function(input)
+        if dragging and input == dragInput then
+            update(input)
+        end
+    end)
+end
+
+dragify(TextButton)
+
+TextButton.MouseButton1Click:Connect(tpforward)
+
 }, "MobileQuickTP")
 
 sections.physic2:Toggle({
@@ -726,26 +774,7 @@ sections.mag3:Toggle({
 
 
 
-sections.mag4:Button({
-	Name = "Update Selection",
-	Callback = function()
-		Dropdown:UpdateSelection("Grapes")
-		MultiDropdown:UpdateSelection({"Banana", "Pineapple"})
-	end,
-})
 
-sections.mag2:Divider()
-
-
-
-
-sections.mag3:Label({
-	Text = "Label. Lorem ipsum odor amet, consectetuer adipiscing elit."
-})
-
-sections.mag4:SubLabel({
-	Text = "Sub-Label. Lorem ipsum odor amet, consectetuer adipiscing elit."
-})
 
 MacLib:SetFolder("Maclib")
 tabs.Settings:InsertConfigSection("Left")
