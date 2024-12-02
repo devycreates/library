@@ -569,9 +569,21 @@ sections.physic1:Keybind({
     end,
 }, "QuickTPBind")
 
-local userInputService = game:GetService("UserInputService")
-local quicktpcooldown = os.clock()
 local tpdistance = 2
+
+sections.physic1:Slider({
+    Name = "Quick TP Distance",
+    Default = 2,
+    Minimum = 1,
+    Maximum = 10,
+    DisplayMethod = "Value",
+    Precision = 1,
+    Callback = function(value)
+        tpdistance = value
+    end
+}, "QuickTPDistance")
+
+local quicktpcooldown = os.clock()
 
 local function tpforward()
     local character = player.Character
@@ -596,82 +608,44 @@ sections.physic1:Toggle({
     Name = "Mobile Quick TP",
     Default = false,
     Callback = function(state)
-        Toggle = state
+        quickTPEnabled = state
 
         Window:Notify({
             Title = Window.Settings.Title,
             Description = (state and "Enabled " or "Disabled ") .. "Mobile Quick TP"
         })
 
-        if Toggle then
-            local ScreenGui = Instance.new("ScreenGui")
-            local TextButton = Instance.new("TextButton")
-            local UICorner = Instance.new("UICorner")
-
-            ScreenGui.Parent = player:WaitForChild("PlayerGui")
-            ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-
-            TextButton.Parent = ScreenGui
-            TextButton.BackgroundColor3 = Color3.new(0, 0, 0)
-            TextButton.BackgroundTransparency = 0.5
-            TextButton.BorderColor3 = Color3.fromRGB(0, 0, 0)
-            TextButton.BorderSizePixel = 0
-            TextButton.Position = UDim2.new(0.47683534, 0, 0.461152881, 0)
-            TextButton.Size = UDim2.new(0, 65, 0, 62)
-            TextButton.Font = Enum.Font.GothamBold
-            TextButton.Text = "teleport"
-            TextButton.TextColor3 = Color3.new(0.8314, 0.8314, 0.8314)
-            TextButton.TextSize = 17.000
-
-            UICorner.Parent = TextButton
-
-            local function dragify(button)
-                local dragging, dragInput, dragStart, startPos
-
-                local function update(input)
-                    local delta = input.Position - dragStart
-                    button.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-                end
-
-                button.InputBegan:Connect(function(input)
-                    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                        dragging = true
-                        dragStart = input.Position
-                        startPos = button.Position
-
-                        input.Changed:Connect(function()
-                            if input.UserInputState == Enum.UserInputState.End then
-                                dragging = false
-                            end
-                        end)
-                    end
-                end)
-
-                button.InputChanged:Connect(function(input)
-                    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-                        dragInput = input
-                    end
-                end)
-
-                userInputService.InputChanged:Connect(function(input)
-                    if dragging and input == dragInput then
-                        update(input)
-                    end
-                end)
-            end
-
-            dragify(TextButton)
-
-            TextButton.MouseButton1Click:Connect(tpforward)
+        if state then
+            MobileQuickTPButton.Visible = true
         else
-            local existingGui = player.PlayerGui:FindFirstChild("ScreenGui")
-            if existingGui then
-                existingGui:Destroy()
-            end
+            MobileQuickTPButton.Visible = false
         end
-    end
+    end,
 }, "MobileQuickTP")
 
+local function createMobileQuickTPButton()
+    local screenGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
+    local button = Instance.new("TextButton")
+    button.Size = UDim2.fromOffset(120, 60)
+    button.Position = UDim2.fromScale(0.5, 0.9) - UDim2.fromOffset(60, 30)
+    button.Text = "TP"
+    button.TextColor3 = Color3.fromRGB(255, 255, 255)
+    button.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    button.BorderSizePixel = 2
+    button.BorderColor3 = Color3.fromRGB(255, 255, 255)
+    button.TextStrokeTransparency = 0.8
+    button.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+    button.Font = Enum.Font.GothamBold
+    button.TextSize = 24
+    button.AutoButtonColor = false
+    button.Visible = false
+    button.Parent = screenGui
+    return button
+end
+
+local MobileQuickTPButton = createMobileQuickTPButton()
+
+MobileQuickTPButton.MouseButton1Click:Connect(tpforward)
 
 sections.physic2:Toggle({
     Name = "Anti Block",
@@ -746,6 +720,32 @@ sections.physic2:Toggle({
         end
     end
 }, "AntiJam")
+
+sections.physic3:Toggle({
+    Name = "Anti Out of Bounds",
+    Default = false,
+    Callback = function(state)
+        antiOOB.Value = state
+
+        Window:Notify({
+            Title = Window.Settings.Title,
+            Description = (state and "Enabled " or "Disabled ") .. "Anti Out of Bounds"
+        })
+
+        for index, boundary in pairs(boundaries) do
+            boundary.Parent = not state and workspace.Models.Boundaries or nil
+        end
+    end,
+}, "AntiOutOfBounds")
+
+local boundaries = {}
+
+if not IS_PRACTICE then
+    for index, part in pairs(workspace.Models.Boundaries:GetChildren()) do
+        boundaries[#boundaries + 1] = part
+    end
+end
+
 
 local alphaColorPicker = sections.mag3:Colorpicker({
 	Name = "Transparency Colorpicker",
