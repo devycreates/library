@@ -320,7 +320,7 @@ end
 mouse.Button1Down:Connect(function()
     if not magnetenabled then return end
 
-    local character = LocalPlayer.Character
+    local character = player.Character
     if character and not isCharacterSitting(character) then
         local nearestBall = findNearestBall(character)
         if nearestBall and waitForChildOfClass(nearestBall, "TouchTransmitter", timeout) then
@@ -625,15 +625,48 @@ local function tpforward()
     if (os.clock() - quickTPCooldown) < 0.1 then return end
 
     local speed = 2 + (tpDistance / 4)
-    humanoidRootPart.CFrame += humanoid.MoveDirection * speed
+    humanoidRootPart.CFrame = humanoidRootPart.CFrame + humanoid.MoveDirection * speed
     quickTPCooldown = os.clock()
 end
 
-userInputService.InputBegan:Connect(function(input, gp)
-    if gp then return end
-    if input.KeyCode ~= QuickTPBind.Value then return end
-    tpforward()
-end)
+local player = game:GetService("Players").LocalPlayer
+
+local function createMobileQuickTPButton()
+    local screenGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
+    local button = Instance.new("TextButton")
+    button.Size = UDim2.fromOffset(120, 60)
+    button.Position = UDim2.fromScale(0.5, 0.9) - UDim2.fromOffset(60, 30)
+    button.Text = "teleport"
+    button.TextColor3 = Color3.fromRGB(255, 255, 255)
+    button.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    button.BorderSizePixel = 2
+    button.BorderColor3 = Color3.fromRGB(255, 255, 255)
+    button.TextStrokeTransparency = 0.8
+    button.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+    button.Font = Enum.Font.GothamBold
+    button.TextSize = 24
+    button.AutoButtonColor = false
+    button.Visible = false
+    button.Parent = screenGui
+    return button
+end
+
+local MobileQuickTPButton = createMobileQuickTPButton()
+
+sections.physic1:Toggle({
+    Name = "Mobile Quick TP",
+    Default = false,
+    Callback = function(state)
+        MobileQuickTPButton.Visible = state
+
+        Window:Notify({
+            Title = Window.Settings.Title,
+            Description = (state and "Enabled " or "Disabled ") .. "Mobile Quick TP"
+        })
+    end,
+}, "MobileQuickTP")
+
+MobileQuickTPButton.MouseButton1Click:Connect(tpforward)
 
 
 sections.physic2:Toggle({
