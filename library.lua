@@ -25,7 +25,7 @@ local player = game:GetService("Players").LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
 local humanoid = character:WaitForChild("Humanoid")
 local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
-local Mouse = LocalPlayer:GetMouse()
+local mouse = player:GetMouse()
 
 local Workspace = game:GetService("Workspace")
 local camera = workspace.CurrentCamera
