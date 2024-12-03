@@ -51,13 +51,13 @@ function findClosestBall()
 	return nearestBall
 end
 
-local IS_PRACTICE = game.PlaceId == 8206123457
-local IS_SOLARA = string.match(getexecutorname(), "Solara")
-local AC_BYPASS = IS_PRACTICE
+local practice = game.PlaceId == 8206123457
+local solara = string.match(getexecutorname(), "Solara")
+local acbypass = practice
 
 local moveToUsing = {}
 
-if not values or IS_PRACTICE then
+if not values or practice then
 if replicatedStorage:FindFirstChild("Values") then
   replicatedStorage:FindFirstChild("Values"):Destroy()
 end
@@ -116,7 +116,7 @@ local MacLib = loadstring(game:HttpGet("https://github.com/biggaboy212/Maclib/re
 local Window = MacLib:Window({
 	Title = "Volt Client 2.0.0",
 	Subtitle = "Build - Paid | FF2",
-	Size = UDim2.fromOffset(820, 615),
+	Size = UDim2.fromOffset(800, 600),
 	DragStyle = 2,
 	DisabledWindowControls = {},
 	ShowUserInfo = true,
@@ -185,37 +185,35 @@ local sections = {
 	mag1 = tabs.Catching:Section({ Side = "Left" }),
 	mag2 = tabs.Catching:Section({ Side = "Left" }),
 	mag3 = tabs.Catching:Section({ Side = "Right" }),
-	mag4 = tabs.Catching:Section({ Side = "Right" }),
+	
 
 	physic1 = tabs.Physics:Section({ Side = "Left" }),
 	physic2 = tabs.Physics:Section({ Side = "Left" }),
 	physic3 = tabs.Physics:Section({ Side = "Right" }),
-	physic4 = tabs.Physics:Section({ Side = "Right" }),
+	
 
 	qb1 = tabs.Quarterback:Section({ Side = "Left" }),
 	qb2 = tabs.Quarterback:Section({ Side = "Left" }),
 	qb3 = tabs.Quarterback:Section({ Side = "Right" }),
-	qb4 = tabs.Quarterback:Section({ Side = "Right" }),
+	
 
 	visual1 = tabs.Visuals:Section({ Side = "Left" }),
 	visual2 = tabs.Visuals:Section({ Side = "Left" }),
 	visual3 = tabs.Visuals:Section({ Side = "Right" }),
-	visual4 = tabs.Visuals:Section({ Side = "Right" }),
+	
 
 	defense1 = tabs.Defense:Section({ Side = "Left" }),
 	defense2 = tabs.Defense:Section({ Side = "Left" }),
 	defense3 = tabs.Defense:Section({ Side = "Right" }),
-	defense4 = tabs.Defense:Section({ Side = "Right" }),
+	
 
 	automatic1 = tabs.Automatics:Section({ Side = "Left" }),
 	automatic2 = tabs.Automatics:Section({ Side = "Left" }),
 	automatic3 = tabs.Automatics:Section({ Side = "Right" }),
-	automatic4 = tabs.Automatics:Section({ Side = "Right" }),
-
+	
 	player1 = tabs.Player:Section({ Side = "Left" }),
 	player2 = tabs.Player:Section({ Side = "Left" }),
 	player3 = tabs.Player:Section({ Side = "Right" }),
-	player4 = tabs.Player:Section({ Side = "Right" }),
 }
 
 sections.mag1:Header({
@@ -490,7 +488,7 @@ sections.mag2:Toggle({
 local Workspace = game:GetService("Workspace")
 local distance2 = 3
 
-sections.mag3:Toggle({
+sections.mag2:Toggle({
     Name = "Ball Resize",
     Default = false,
     Callback = function(enabled)
@@ -506,7 +504,7 @@ sections.mag3:Toggle({
     end,
 }, "BallResize")
 
-sections.mag3:Slider({
+sections.mag2:Slider({
     Name = "Ball Size",
     Default = 3,
     Minimum = 0,
@@ -526,7 +524,7 @@ sections.mag3:Slider({
     end,
 }, "BallSize")
 
-sections.mag2:Toggle({
+sections.mag3:Toggle({
     Name = "Magnet Activation Delay",
     Default = false,
     Callback = function(value)
@@ -538,7 +536,7 @@ sections.mag2:Toggle({
     end,
 }, "MagnetActivationDelay")
 
-sections.mag1:Slider({
+sections.mag3:Slider({
     Name = "Magnet Delay",
     Default = 0,
     Minimum = 0,
@@ -565,7 +563,7 @@ local rainbowConnection
 local hue = 0
 
 sections.mag3:Toggle({
-	Name = "Rainbow",
+	Name = "Rainbow Hitbox",
 	Default = false,
 	Callback = function(value)
 		rainbowActive = value
@@ -636,48 +634,6 @@ userInputService.InputBegan:Connect(function(input, gp)
     tpforward()
 end)
 
-sections.physic1:Toggle({
-    Name = "Mobile Quick TP",
-    Default = false,
-    Callback = function(state)
-        quickTPEnabled = state
-
-        Window:Notify({
-            Title = Window.Settings.Title,
-            Description = (state and "Enabled " or "Disabled ") .. "Mobile Quick TP"
-        })
-
-        if state then
-            MobileQuickTPButton.Visible = true
-        else
-            MobileQuickTPButton.Visible = false
-        end
-    end,
-}, "MobileQuickTP")
-
-local function createMobileQuickTPButton()
-    local screenGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
-    local button = Instance.new("TextButton")
-    button.Size = UDim2.fromOffset(120, 60)
-    button.Position = UDim2.fromScale(0.5, 0.9) - UDim2.fromOffset(60, 30)
-    button.Text = "TP"
-    button.TextColor3 = Color3.fromRGB(255, 255, 255)
-    button.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-    button.BorderSizePixel = 2
-    button.BorderColor3 = Color3.fromRGB(255, 255, 255)
-    button.TextStrokeTransparency = 0.8
-    button.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
-    button.Font = Enum.Font.GothamBold
-    button.TextSize = 24
-    button.AutoButtonColor = false
-    button.Visible = false
-    button.Parent = screenGui
-    return button
-end
-
-local MobileQuickTPButton = createMobileQuickTPButton()
-
-MobileQuickTPButton.MouseButton1Click:Connect(tpforward)
 
 sections.physic2:Toggle({
     Name = "Anti Block",
@@ -753,7 +709,7 @@ sections.physic2:Toggle({
     end
 }, "AntiJam")
 
-sections.physic3:Toggle({
+sections.physic2:Toggle({
     Name = "Anti Out of Bounds",
     Default = false,
     Callback = function(state)
@@ -772,7 +728,7 @@ sections.physic3:Toggle({
 
 local boundaries = {}
 
-if not IS_PRACTICE then
+if not practice then
     for index, part in pairs(workspace.Models.Boundaries:GetChildren()) do
         boundaries[#boundaries + 1] = part
     end
