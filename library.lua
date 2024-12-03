@@ -317,7 +317,7 @@ local function stopMagnet()
     end
 end
 
-Mouse.Button1Down:Connect(function()
+mouse.Button1Down:Connect(function()
     if not magnetenabled then return end
 
     local character = LocalPlayer.Character
