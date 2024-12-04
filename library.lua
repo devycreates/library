@@ -616,26 +616,15 @@ sections.physic1:Slider({
 
 local quicktpcooldown = os.clock()
 
-local function tpforward()
-    local character = player.Character
-    local humanoidRootPart = character and character:FindFirstChild("HumanoidRootPart")
-    local humanoid = character and character:FindFirstChild("Humanoid")
 
-    if not character or not humanoidRootPart or not humanoid then return end
-    if (os.clock() - quickTPCooldown) < 0.1 then return end
-
-    local speed = 2 + (tpDistance / 4)
-    humanoidRootPart.CFrame = humanoidRootPart.CFrame + humanoid.MoveDirection * speed
-    quickTPCooldown = os.clock()
-end
-
-local player = game:GetService("Players").LocalPlayer
 
 local function createMobileQuickTPButton()
-    local screenGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
+    local screenGui = Instance.new("ScreenGui")
+    screenGui.Parent = player:WaitForChild("PlayerGui")
+    
     local button = Instance.new("TextButton")
     button.Size = UDim2.fromOffset(120, 60)
-    button.Position = UDim2.fromScale(0.5, 0.9) - UDim2.fromOffset(60, 30)
+    button.Position = UDim2.new(0.5, -60, 0.9, -30)
     button.Text = "teleport"
     button.TextColor3 = Color3.fromRGB(255, 255, 255)
     button.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
@@ -648,10 +637,28 @@ local function createMobileQuickTPButton()
     button.AutoButtonColor = false
     button.Visible = false
     button.Parent = screenGui
+    
     return button
 end
 
 local MobileQuickTPButton = createMobileQuickTPButton()
+
+local function tpforward()
+    local character = player.Character or player.CharacterAdded:Wait()
+    local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+    local humanoid = character:WaitForChild("Humanoid")
+
+    if not character or not humanoidRootPart or not humanoid then return end
+    if (os.clock() - quickTPCooldown) < 0.1 then return end
+
+    local speed = 2 + (tpDistance / 4)
+    humanoidRootPart.CFrame = humanoidRootPart.CFrame + humanoid.MoveDirection * speed
+    quickTPCooldown = os.clock()
+end
+
+MobileQuickTPButton.MouseButton1Click:Connect(tpforward)
+
+
 
 sections.physic1:Toggle({
     Name = "Mobile Quick TP",
@@ -666,7 +673,7 @@ sections.physic1:Toggle({
     end,
 }, "MobileQuickTP")
 
-MobileQuickTPButton.MouseButton1Click:Connect(tpforward)
+
 
 
 sections.physic2:Toggle({
