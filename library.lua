@@ -174,7 +174,7 @@ local tabs = {
     Catching = tabGroups.Game:Tab({ Name = "Catching", Image = "rbxassetid://10723405649" }),
     Physics = tabGroups.World:Tab({ Name = "Physics", Image = "rbxassetid://10747382750" }),
     Quarterback = tabGroups.Game:Tab({ Name = "Quarterback", Image = "rbxassetid://10734898592" }),
-    Visuals = tabGroups.World:Tab({ Name = "Visuals", Image = "rbxassetid://104811813262009" }),
+    Visuals = tabGroups.World:Tab({ Name = "Visuals", Image = "rbxassetid://10723346959" }),
     Defense = tabGroups.Game:Tab({ Name = "Defense", Image = "rbxassetid://10734951847" }),
     Automatics = tabGroups.World:Tab({ Name = "Automatics", Image = "rbxassetid://10709759764" }),
     Player = tabGroups.Other:Tab({ Name = "Player", Image = "rbxassetid://10734920149" }),
