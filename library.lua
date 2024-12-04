@@ -112,56 +112,79 @@ end))
 
 task.wait(1)
 
-local MacLib = loadstring(game:HttpGet("https://github.com/biggaboy212/Maclib/releases/latest/download/maclib.txt"))()
 
-local Window = MacLib:Window({
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/lxte/lates-lib/main/Main.lua"))()
+local Window = Library:CreateWindow({
 	Title = "Volt Client 2.0.0",
-	Subtitle = "Build - Paid | FF2",
-	Size = UDim2.fromOffset(800, 600),
-	DragStyle = 2,
-	DisabledWindowControls = {},
-	ShowUserInfo = true,
-	Keybind = Enum.KeyCode.RightControl,
-	AcrylicBlur = true,
+	Theme = "Void",
+	
+	Size = UDim2.fromOffset(620, 430),
+	Transparency = 0.2,
+	Blurring = true,
+	MinimizeKeybind = Enum.KeyCode.LeftAlt,
 })
 
-local globalSettings = {
-	UIBlurToggle = Window:GlobalSetting({
-		Name = "UI Blur",
-		Default = Window:GetAcrylicBlurState(),
-		Callback = function(bool)
-			Window:SetAcrylicBlurState(bool)
-			Window:Notify({
-				Title = Window.Settings.Title,
-				Description = (bool and "Enabled" or "Disabled") .. " UI Blur",
-				Lifetime = 5
-			})
-		end,
-	}),
-	NotificationToggler = Window:GlobalSetting({
-		Name = "Notifications",
-		Default = Window:GetNotificationsState(),
-		Callback = function(bool)
-			Window:SetNotificationsState(bool)
-			Window:Notify({
-				Title = Window.Settings.Title,
-				Description = (bool and "Enabled" or "Disabled") .. " Notifications",
-				Lifetime = 5
-			})
-		end,
-	}),
-	ShowUserInfo = Window:GlobalSetting({
-		Name = "Show User Info",
-		Default = Window:GetUserInfoState(),
-		Callback = function(bool)
-			Window:SetUserInfoState(bool)
-			Window:Notify({
-				Title = Window.Settings.Title,
-				Description = (bool and "Showing" or "Redacted") .. " User Info",
-				Lifetime = 5
-			})
-		end,
-	})
+local Themes = {
+	Light = {
+		--// Frames:
+		Primary = Color3.fromRGB(232, 232, 232),
+		Secondary = Color3.fromRGB(255, 255, 255),
+		Component = Color3.fromRGB(245, 245, 245),
+		Interactables = Color3.fromRGB(235, 235, 235),
+
+		--// Text:
+		Tab = Color3.fromRGB(50, 50, 50),
+		Title = Color3.fromRGB(0, 0, 0),
+		Description = Color3.fromRGB(100, 100, 100),
+
+		--// Outlines:
+		Shadow = Color3.fromRGB(255, 255, 255),
+		Outline = Color3.fromRGB(210, 210, 210),
+
+		--// Image:
+		Icon = Color3.fromRGB(100, 100, 100),
+	},
+	
+	Dark = {
+		--// Frames:
+		Primary = Color3.fromRGB(30, 30, 30),
+		Secondary = Color3.fromRGB(35, 35, 35),
+		Component = Color3.fromRGB(40, 40, 40),
+		Interactables = Color3.fromRGB(45, 45, 45),
+
+		--// Text:
+		Tab = Color3.fromRGB(200, 200, 200),
+		Title = Color3.fromRGB(240,240,240),
+		Description = Color3.fromRGB(200,200,200),
+
+		--// Outlines:
+		Shadow = Color3.fromRGB(0, 0, 0),
+		Outline = Color3.fromRGB(40, 40, 40),
+
+		--// Image:
+		Icon = Color3.fromRGB(220, 220, 220),
+	},
+	
+	Void = {
+		--// Frames:
+		Primary = Color3.fromRGB(15, 15, 15),
+		Secondary = Color3.fromRGB(20, 20, 20),
+		Component = Color3.fromRGB(25, 25, 25),
+		Interactables = Color3.fromRGB(30, 30, 30),
+
+		--// Text:
+		Tab = Color3.fromRGB(200, 200, 200),
+		Title = Color3.fromRGB(240,240,240),
+		Description = Color3.fromRGB(200,200,200),
+
+		--// Outlines:
+		Shadow = Color3.fromRGB(0, 0, 0),
+		Outline = Color3.fromRGB(40, 40, 40),
+
+		--// Image:
+		Icon = Color3.fromRGB(220, 220, 220),
+	},
+
 }
 
 local tabGroups = {
