@@ -193,56 +193,72 @@ local tabGroups = {
 	Other = Window:TabGroup()
 }
 
-local tabs = {
-    Catching = tabGroups.Game:Tab({ Name = "Catching", Image = "rbxassetid://10723405649" }),
-    Physics = tabGroups.World:Tab({ Name = "Physics", Image = "rbxassetid://10747382750" }),
-    Quarterback = tabGroups.Game:Tab({ Name = "Quarterback", Image = "rbxassetid://10734898592" }),
-    Visuals = tabGroups.World:Tab({ Name = "Visuals", Image = "rbxassetid://10723346959" }),
-    Defense = tabGroups.Game:Tab({ Name = "Defense", Image = "rbxassetid://10734951847" }),
-    Automatics = tabGroups.World:Tab({ Name = "Automatics", Image = "rbxassetid://10709759764" }),
-    Player = tabGroups.Other:Tab({ Name = "Player", Image = "rbxassetid://10734920149" }),
-    Settings = tabGroups.Other:Tab({ Name = "Settings", Image = "rbxassetid://10734950309" })
-}
-
-
-local sections = {
-	mag1 = tabs.Catching:Section({ Side = "Left" }),
-	mag2 = tabs.Catching:Section({ Side = "Left" }),
-	mag3 = tabs.Catching:Section({ Side = "Right" }),
-	
-
-	physic1 = tabs.Physics:Section({ Side = "Left" }),
-	physic2 = tabs.Physics:Section({ Side = "Left" }),
-	physic3 = tabs.Physics:Section({ Side = "Right" }),
-	
-
-	qb1 = tabs.Quarterback:Section({ Side = "Left" }),
-	qb2 = tabs.Quarterback:Section({ Side = "Left" }),
-	qb3 = tabs.Quarterback:Section({ Side = "Right" }),
-	
-
-	visual1 = tabs.Visuals:Section({ Side = "Left" }),
-	visual2 = tabs.Visuals:Section({ Side = "Left" }),
-	visual3 = tabs.Visuals:Section({ Side = "Right" }),
-	
-
-	defense1 = tabs.Defense:Section({ Side = "Left" }),
-	defense2 = tabs.Defense:Section({ Side = "Left" }),
-	defense3 = tabs.Defense:Section({ Side = "Right" }),
-	
-
-	automatic1 = tabs.Automatics:Section({ Side = "Left" }),
-	automatic2 = tabs.Automatics:Section({ Side = "Left" }),
-	automatic3 = tabs.Automatics:Section({ Side = "Right" }),
-	
-	player1 = tabs.Player:Section({ Side = "Left" }),
-	player2 = tabs.Player:Section({ Side = "Left" }),
-	player3 = tabs.Player:Section({ Side = "Right" }),
-}
-
-sections.mag1:Header({
-	Name = "Magnets"
+local Catching = Window:AddTab({
+	Title = "Catching",
+	Section = "Game",
+	Icon = "rbxassetid://10723405649"
 })
+
+local Physics = Window:AddTab({
+	Title = "Physics",
+	Section = "World",
+	Icon = "rbxassetid://10747382750"
+})
+
+local QB = Window:AddTab({
+	Title = "Quarterback",
+	Section = "Game",
+	Icon = "rbxassetid://10734898592"
+})
+
+local Visuals = Window:AddTab({
+	Title = "Visuals",
+	Section = "World",
+	Icon = "rbxassetid://10723346959"
+})
+
+
+local Defense = Window:AddTab({
+	Title = "Defense",
+	Section = "Game",
+	Icon = "rbxassetid://10734951847"
+})
+
+local Automatics = Window:AddTab({
+	Title = "Automatics",
+	Section = "World",
+	Icon = "rbxassetid://10709759764"
+})
+
+local Player = Window:AddTab({
+	Title = "Player",
+	Section = "Other",
+	Icon = "rbxassetid://10734920149"
+})
+
+local Settings = Window:AddTab({
+	Title = "Settings",
+	Section = "Other",
+	Icon = "rbxassetid://10734950309"
+})
+
+
+-- sections
+Window:AddTabSection({
+	Name = "Game",
+	Order = 1,
+})
+
+Window:AddTabSection({
+	Name = "World",
+	Order = 2,
+})
+
+Window:AddTabSection({
+	Name = "Other",
+	Order = 3,
+})
+
 
 local catching = false
 local magnetenabled = false
@@ -357,112 +373,95 @@ mouse.Button1Down:Connect(function()
     end
 end)
 
-sections.mag1:Toggle({
-    Name = "Magnets",
-    Default = false,
+Window:AddToggle({
+    Title = "Magnets",
+    Description = "Extends the football catch distance.",
+    Tab = Catching,
     Callback = function(value)
-      magnetenabled = value
+        magnetenabled = value
         Window:Notify({
-            Title = Window.Settings.Title,
-            Description = (value and "Enabled " or "Disabled ") .. "Magnets"
-        })
+            Title = "volt.gg",
+            Description = (value and "Enabled Magnets" or "Disabled Magnets"),
+            Duration = 5
         if value then
             startMagnet(distance)
         else
             stopMagnet()
         end
-    end,
-}, "Magnets")
+    end
+})
 
-sections.mag1:Slider({
-    Name = "Magnet Distance",
-    Default = 10,
-    Minimum = 0,
-    Maximum = 25,
-    DisplayMethod = "Value",
-    Precision = 0,
-    Callback = function(value)
+Window:AddSlider({
+    Title = "Magnet Distance",
+    Description = "Set the distance of the magnets.",
+    Tab = Catching,
+    AllowDecimals = true,
+    MaxValue = 25,
+    Callback = function(value) 
         hitboxSize = Vector3.new(value, value, value)
         if magnetenabled then
             tdistance = value
         end
     end
-}, "MagnetDistance")
+})
 
-local alphaColorPicker = sections.mag3:Colorpicker({
-    Name = "Hitbox Colorpicker",
-    Default = Color3.fromRGB(255, 0, 0),
-    Alpha = 0,
-    Callback = function(color, alpha)
-        hitboxColor = color
-        if shared.Mags then
-            for _, v in pairs(workspace:GetChildren()) do
-                if v.Name == "Football" and v:IsA("BasePart") then
-                    local hitbox = v:FindFirstChild("MagnetHitbox")
-                    if hitbox then
-                        hitbox.Color = hitboxColor
-                    end
-                end
-            end
-        end
-    end,
-}, "TransparencyColorpicker")
-
-
-
-sections.mag1:Toggle({
-    Name = "View Mag Hitbox",
-    Default = false,
-    Callback = function(state)
-        magnetsEnabled = state
-
+Window:AddToggle({
+    Title = "Magnet Hitbox",
+    Description = "Toggle the magnet hitbox.",
+    Tab = Catching,
+    Callback = function(value)
+        magnetsEnabled = value
         Window:Notify({
-            Title = Window.Settings.Title,
-            Description = (state and "Enabled " or "Disabled ") .. "Mag Hitbox"
+            Title = "volt.gg",
+            Description = (value and "Enabled Magnet Hitbox" or "Disabled Magnet Hitbox"),
+            Duration = 5
         })
-
-        local function createHitbox(target)
-            if not target:IsA("BasePart") then return end
-
-            local hitbox = Instance.new("Part")
-            hitbox.Shape = Enum.PartType.Ball
-            hitbox.Size = hitboxSize
-            hitbox.Transparency = 0.05
-            hitbox.Anchored = true
-            hitbox.CanCollide = false
-            hitbox.Material = Enum.Material.ForceField
-            hitbox.Name = "MagnetHitbox"
-            hitbox.CFrame = target.CFrame
-            hitbox.CastShadow = false
-            hitbox.Parent = target
-            
-            hitbox.Color = hitboxColor or Color3.fromRGB(0, 255, 255)
-
-            local function updateHitbox()
-                while magnetsEnabled and target and target.Parent do
-                    hitbox.Size = hitboxSize
-                    hitbox.CFrame = target.CFrame
-                    task.wait()
+        
+        if value then
+            for _, child in pairs(workspace:GetChildren()) do
+                if child.Name == "Football" and child:IsA("BasePart") and magnetsEnabled then
+                    createHitbox(child)
                 end
-                hitbox:Destroy()
             end
 
-            task.spawn(updateHitbox)
+            workspace.ChildAdded:Connect(function(child)
+                if child.Name == "Football" and child:IsA("BasePart") and magnetsEnabled then
+                    createHitbox(child)
+                end
+            end)
         end
-
-        for _, child in pairs(workspace:GetChildren()) do
-            if child.Name == "Football" and child:IsA("BasePart") and magnetsEnabled then
-                createHitbox(child)
-            end
-        end
-
-        workspace.ChildAdded:Connect(function(child)
-            if child.Name == "Football" and child:IsA("BasePart") and magnetsEnabled then
-                createHitbox(child)
-            end
-        end)
     end
-}, "ViewMagHitbox")
+})
+
+local function createHitbox(target)
+    if not target:IsA("BasePart") then return end
+
+    local hitbox = Instance.new("Part")
+    hitbox.Shape = Enum.PartType.Ball
+    hitbox.Size = hitboxSize
+    hitbox.Transparency = 0.05
+    hitbox.Anchored = true
+    hitbox.CanCollide = false
+    hitbox.Material = Enum.Material.ForceField
+    hitbox.Name = "MagnetHitbox"
+    hitbox.CFrame = target.CFrame
+    hitbox.CastShadow = false
+    hitbox.Parent = target
+    
+    hitbox.Color = Color3.fromRGB(0, 255, 255)
+
+    local function updateHitbox()
+        while magnetsEnabled and target and target.Parent do
+            hitbox.Size = hitboxSize
+            hitbox.CFrame = target.CFrame
+            task.wait()
+        end
+        hitbox:Destroy()
+    end
+
+    task.spawn(updateHitbox)
+end
+
 
 local player = game.Players.LocalPlayer
 
@@ -475,24 +474,10 @@ local function updateArms(size)
     end
 end
 
-sections.mag2:Slider({
-    Name = "Arm Size",
-    Default = 2,
-    Minimum = 1,
-    Maximum = 5,
-    DisplayMethod = "Value",
-    Precision = 1,
-    Callback = function(value)
-        _G.ArmSize = value
-        if _G.ArmResizerEnabled then
-            updateArms(_G.ArmSize)
-        end
-    end,
-}, "ArmSize")
-
-sections.mag2:Toggle({
-    Name = "Arm Resizer",
-    Default = false,
+Window:AddToggle({
+    Title = "Arm Resizer",
+    Description = "Increases your arm length according to the value you set it to.",
+    Tab = Catching,
     Callback = function(enabled)
         _G.ArmResizerEnabled = enabled
         if enabled then
@@ -505,16 +490,36 @@ sections.mag2:Toggle({
                 player.Character['Right Arm'].Transparency = 0
             end
         end
-    end,
-}, "ArmResizer")
+        Window:Notify({
+            Title = "volt.gg",
+            Description = (enabled and "Enabled Arm Resizer" or "Disabled Arm Resizer"),
+            Duration = 5
+        })
+    end
+})
+
+Window:AddSlider({
+    Title = "Arm Size",
+    Description = "Set the size of the arms when the toggle is enabled.",
+    Tab = Catching,
+    AllowDecimals = true,
+    MaxValue = 20,
+    Callback = function(value)
+        _G.ArmSize = value
+        if _G.ArmResizerEnabled then
+            updateArms(_G.ArmSize)
+        end
+    end
+})
 
 
 local Workspace = game:GetService("Workspace")
 local distance2 = 3
 
-sections.mag2:Toggle({
-    Name = "Ball Resize",
-    Default = false,
+Window:AddToggle({
+    Title = "Ball Resize",
+    Description = "Resizes the football.",
+    Tab = Catching,
     Callback = function(enabled)
         _G.BallResize = enabled
         if enabled then
@@ -525,16 +530,21 @@ sections.mag2:Toggle({
                 end
             end)
         end
-    end,
-}, "BallResize")
+        Window:Notify({
+            Title = "volt.gg",
+            Description = (enabled and "Enabled Ball Resize" or "Disabled Ball Resize"),
+            Duration = 5
+        })
+    end
+})
 
-sections.mag2:Slider({
-    Name = "Ball Size",
-    Default = 3,
-    Minimum = 0,
-    Maximum = 20,
-    DisplayMethod = "Value",
-    Precision = 1,
+		
+Window:AddSlider({
+    Title = "Ball Size",
+    Description = "Set the size of the footballs.",
+    Tab = Catching,
+    AllowDecimals = true,
+    MaxValue = 20,
     Callback = function(value)
         distance = value
         if _G.BallResize then
@@ -545,8 +555,9 @@ sections.mag2:Slider({
                 end
             end
         end
-    end,
-}, "BallSize")
+    end
+})
+
 
 sections.mag3:Toggle({
     Name = "Magnet Activation Delay",
