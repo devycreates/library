@@ -291,10 +291,10 @@ local function startMagnet(reach)
     catching = true
     tdistance = reach
 
-    RunService.Heartbeat:Connect(function()
+    runService.Heartbeat:Connect(function()
         if not catching then return end
 
-        local character = LocalPlayer.Character
+        local character = player.Character
         if character and not isCharacterSitting(character) then
             local nearestBall = findNearestBall(character)
             if nearestBall then
@@ -310,7 +310,7 @@ local function stopMagnet()
     magnetenabled = false
     catching = false
 
-    local character = LocalPlayer.Character
+    local character = player.Character
     if character and character:FindFirstChild("CatchRight") and character:FindFirstChild("CatchLeft") then
         character.CatchRight.Size = Vector3.new(1, 1, 1)
         character.CatchLeft.Size = Vector3.new(1, 1, 1)
@@ -768,6 +768,82 @@ if not practice then
     end
 end
 
+local function adjustHeads(scaleValue, transparencyValue, thinValue)
+    for _, v in pairs(game.Players:GetPlayers()) do
+        if v ~= player and v.Character and v.Character:FindFirstChild("Head") then
+            local head = v.Character.Head
+            head.Size = Vector3.new(thinValue, scaleValue, thinValue)
+            head.Transparency = transparencyValue
+            if head:FindFirstChild("Mesh") then
+                head.Mesh.Scale = Vector3.new(thinValue, scaleValue, thinValue)
+            end
+        end
+    end
+end
+
+sections.physic3:Toggle({
+    Name = "Enable Head Adjustments",
+    Default = false,
+    Callback = function(state)
+        AdjustHeadsEnabled = state
+
+        Window:Notify({
+            Title = Window.Settings.Title,
+            Description = (state and "Enabled " or "Disabled ") .. "Head Adjustments"
+        })
+
+        if state then
+            adjustHeads(HeadScale, HeadTransparency, HeadThinness)
+        end
+    end,
+}, "AdjustHeadsEnabled")
+
+sections.physic3:Slider({
+    Name = "Head Scale",
+    Default = 1,
+    Minimum = 1,
+    Maximum = 5,
+    Precision = 1,
+    Callback = function(value)
+        HeadScale = value
+        if AdjustHeadsEnabled then
+            adjustHeads(HeadScale, HeadTransparency, HeadThinness)
+        end
+    end,
+}, "HeadScale")
+
+sections.physic3:Slider({
+    Name = "Head Transparency",
+    Default = 0,
+    Minimum = 0,
+    Maximum = 1,
+    Precision = 2,
+    Callback = function(value)
+        HeadTransparency = value
+        if AdjustHeadsEnabled then
+            adjustHeads(HeadScale, HeadTransparency, HeadThinness)
+        end
+    end,
+}, "HeadTransparency")
+
+sections.physic3:Slider({
+    Name = "Head Thinness",
+    Default = 1,
+    Minimum = 1,
+    Maximum = 10,
+    Precision = 1,
+    Callback = function(value)
+        HeadThinness = value
+        if AdjustHeadsEnabled then
+            adjustHeads(HeadScale, HeadTransparency, HeadThinness)
+        end
+    end,
+}, "HeadThinness")
+
+if AdjustHeadsEnabled then
+    adjustHeads(HeadScale, HeadTransparency, HeadThinness)
+end
+
 MacLib:SetFolder("Maclib")
 tabs.Settings:InsertConfigSection("Left")
 
@@ -775,5 +851,5 @@ Window.onUnloaded(function()
 	print("Unloaded!")
 end)
 
-tabs.Settings:Select()
+tabs.Catching:Select()
 MacLib:LoadAutoLoadConfig()
