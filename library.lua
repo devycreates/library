@@ -380,9 +380,10 @@ Window:AddToggle({
     Callback = function(value)
         magnetenabled = value
         Window:Notify({
-            Title = "volt.gg",
+            Title = "volt.gg 2.0.0",
             Description = (value and "Enabled Magnets" or "Disabled Magnets"),
             Duration = 5
+        })
         if value then
             startMagnet(distance)
         else
@@ -405,6 +406,7 @@ Window:AddSlider({
     end
 })
 
+
 Window:AddToggle({
     Title = "Magnet Hitbox",
     Description = "Toggle the magnet hitbox.",
@@ -412,7 +414,7 @@ Window:AddToggle({
     Callback = function(value)
         magnetsEnabled = value
         Window:Notify({
-            Title = "volt.gg",
+            Title = "volt.gg 2.0.0",
             Description = (value and "Enabled Magnet Hitbox" or "Disabled Magnet Hitbox"),
             Duration = 5
         })
