@@ -116,7 +116,7 @@ task.wait(1)
 local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/lxte/lates-lib/main/Main.lua"))()
 local Window = Library:CreateWindow({
 	Title = "Volt Client 2.0.0",
-	Theme = "Void",
+	Theme = "Dark",
 	
 	Size = UDim2.fromOffset(620, 430),
 	Transparency = 0.2,
@@ -198,9 +198,10 @@ Window:AddTabSection({
 })
 
 Window:AddTabSection({
-	Name = "Settings",
+	Name = "Other",
 	Order = 3,
 })
+
 local Catching = Window:AddTab({
 	Title = "Catching",
 	Section = "Game",
@@ -248,23 +249,6 @@ local Settings = Window:AddTab({
 	Title = "Settings",
 	Section = "Other",
 	Icon = "rbxassetid://10734950309"
-})
-
-
--- sections
-Window:AddTabSection({
-	Name = "Game",
-	Order = 1,
-})
-
-Window:AddTabSection({
-	Name = "World",
-	Order = 2,
-})
-
-Window:AddTabSection({
-	Name = "Other",
-	Order = 3,
 })
 
 
