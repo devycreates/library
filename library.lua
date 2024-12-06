@@ -1279,13 +1279,3 @@ Window:AddToggle({
     end,
 })
 
-
-MacLib:SetFolder("Maclib")
-tabs.Settings:InsertConfigSection("Left")
-
-Window.onUnloaded(function()
-	print("Unloaded!")
-end)
-
-tabs.Catching:Select()
-MacLib:LoadAutoLoadConfig()
