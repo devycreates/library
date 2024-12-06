@@ -1,8 +1,8 @@
-if getgenv().voltclient then
+if getgenv().volt.gg then
     warn("Script already loaded/is loading or errored.")
     return
 end
-getgenv().voltclient = true
+getgenv().volt.gg = true
 
 loadstring([[
   function LPH_NO_VIRTUALIZE(f) return f end;
@@ -115,7 +115,7 @@ task.wait(1)
 
 local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/lxte/lates-lib/main/Main.lua"))()
 local Window = Library:CreateWindow({
-	Title = "Volt Client 2.0.0",
+	Title = "volt.gg 2.0.0",
 	Theme = "Dark",
 	
 	Size = UDim2.fromOffset(620, 430),
