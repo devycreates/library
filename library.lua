@@ -27,7 +27,7 @@ local humanoid = character:WaitForChild("Humanoid")
 local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
 local mouse = player:GetMouse()
 
-local Workspace = game:GetService("Workspace")
+local workspace = game:GetService("Workspace")
 local camera = workspace.CurrentCamera
 local values = replicatedStorage:FindFirstChild("Values")
 
@@ -558,99 +558,8 @@ Window:AddSlider({
     end
 })
 
-
-sections.mag3:Toggle({
-    Name = "Magnet Activation Delay",
-    Default = false,
-    Callback = function(value)
-        if value then
-            cdelay = 0
-        else
-            cdelay = 0
-        end
-    end,
-}, "MagnetActivationDelay")
-
-sections.mag3:Slider({
-    Name = "Magnet Delay",
-    Default = 0,
-    Minimum = 0,
-    Maximum = 5,
-    DisplayMethod = "Value",
-    Precision = 1,
-    Callback = function(value)
-        cdelay = value
-    end
-}, "MagnetDelay")
-
-
-local alphaColorPicker = sections.mag3:Colorpicker({
-	Name = "Transparency Colorpicker",
-	Default = Color3.fromRGB(255,0,0),
-	Alpha = 0,
-	Callback = function(color, alpha)
-		print("Color: ", color, " Alpha: ", alpha)
-	end,
-}, "TransparencyColorpicker")
-
-local rainbowActive
-local rainbowConnection
-local hue = 0
-
-sections.mag3:Toggle({
-	Name = "Rainbow Hitbox",
-	Default = false,
-	Callback = function(value)
-		rainbowActive = value
-
-		if rainbowActive then
-			rainbowConnection = game:GetService("RunService").RenderStepped:Connect(function(deltaTime)
-				hue = (hue + deltaTime * 0.1) % 1
-				alphaColorPicker:SetColor(Color3.fromHSV(hue, 1, 1))
-			end)
-		elseif rainbowConnection then
-			rainbowConnection:Disconnect()
-			rainbowConnection = nil
-		end
-	end,
-}, "RainbowToggle")
-
-sections.physic1:Keybind({
-    Name = "Quick TP",
-    Blacklist = false,
-    Callback = function(binded)
-        Window:Notify({
-            Title = "Quick TP",
-            Description = "Pressed keybind - " .. tostring(binded.Name),
-            Lifetime = 3
-        })
-    end,
-    onBinded = function(bind)
-        Window:Notify({
-            Title = "Quick TP",
-            Description = "Successfully Binded Keybind to - " .. tostring(bind.Name),
-            Lifetime = 3
-        })
-    end,
-}, "QuickTPBind")
-
 local tpdistance = 2
-
-sections.physic1:Slider({
-    Name = "Quick TP Distance",
-    Default = 2,
-    Minimum = 1,
-    Maximum = 10,
-    DisplayMethod = "Value",
-    Precision = 1,
-    Callback = function(value)
-        tpdistance = value
-    end
-}, "QuickTPDistance")
-
-local quicktpcooldown = os.clock()
-
-
+local quickTPCooldown = os.clock()
 
 local function createMobileQuickTPButton()
     local screenGui = Instance.new("ScreenGui")
@@ -678,77 +587,110 @@ end
 local MobileQuickTPButton = createMobileQuickTPButton()
 
 local function tpforward()
-    local character = player.Character or player.CharacterAdded:Wait()
-    local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
-    local humanoid = character:WaitForChild("Humanoid")
-
     if not character or not humanoidRootPart or not humanoid then return end
     if (os.clock() - quickTPCooldown) < 0.1 then return end
 
-    local speed = 2 + (tpDistance / 4)
-    humanoidRootPart.CFrame = humanoidRootPart.CFrame + humanoid.MoveDirection * speed
+    local camera = workspace.CurrentCamera
+    local lookVector = camera.CFrame.LookVector
+    local speed = 2 + (tpdistance / 4)
+    humanoidRootPart.CFrame = humanoidRootPart.CFrame + lookVector * speed
     quickTPCooldown = os.clock()
 end
 
+
 MobileQuickTPButton.MouseButton1Click:Connect(tpforward)
 
+local boundaries = {}
 
+if not practice then
+    for index, part in pairs(workspace.Models.Boundaries:GetChildren()) do
+        boundaries[#boundaries + 1] = part
+    end
+end
 
-sections.physic1:Toggle({
-    Name = "Mobile Quick TP",
-    Default = false,
-    Callback = function(state)
-        MobileQuickTPButton.Visible = state
-
-        Window:Notify({
-            Title = Window.Settings.Title,
-            Description = (state and "Enabled " or "Disabled ") .. "Mobile Quick TP"
-        })
-    end,
-}, "MobileQuickTP")
-
-
-
-
-sections.physic2:Toggle({
-    Name = "Anti Block",
-    Default = false,
-    Callback = function(state)
-        antiblockon = state
-
-        Window:Notify({
-            Title = Window.Settings.Title,
-            Description = (state and "Enabled " or "Disabled ") .. "Anti Block"
-        })
-    end,
-}, "AntiBlock")
-
-local Torso = player.Character and player.Character:FindFirstChild("Torso")
-
-local function DestroyBlockEvent()
-    if antiblockon then
-        local ffmover = Torso and Torso:FindFirstChild("FFmover")
-        if ffmover then
-            ffmover:Destroy()
+local function adjustHeads(scaleValue, transparencyValue, thinValue)
+    for _, v in pairs(game.Players:GetPlayers()) do
+        if v ~= player and v.Character and v.Character:FindFirstChild("Head") then
+            local head = v.Character.Head
+            head.Size = Vector3.new(thinValue, scaleValue, thinValue)
+            head.Transparency = transparencyValue
+            if head:FindFirstChild("Mesh") then
+                head.Mesh.Scale = Vector3.new(thinValue, scaleValue, thinValue)
+            end
         end
     end
 end
 
-task.spawn(function()
-    while task.wait() do
-        DestroyBlockEvent()
-    end
-end)
 
-sections.physic2:Toggle({
-    Name = "Anti Jam",
-    Default = false,
+Window:AddSlider({
+    Title = "Magnet Delay",
+    Description = "Set the delay for magnet activation",
+    Tab = Catching,
+    AllowDecimals = true,
+    MaxValue = 5,
+    Callback = function(value)
+        cdelay = value
+    end,
+})
+
+Window:AddKeybind({
+    Title = "Quick TP Keybind",
+    Description = "Teleports you quickly to where your camera is looking at.",
+    Tab = Physics,
+    Callback = function(Key)
+        tpforward()
+    end,
+})
+
+Window:AddToggle({
+    Title = "Mobile Quick TP",
+    Description = "Enable or disable mobile quick teleport",
+    Tab = Physics,
+    Callback = function(state)
+        MobileQuickTPButton.Visible = state
+        Window:Notify({
+            Title = "volt.gg 2.0.0",
+            Description = (state and "Enabled" or "Disabled") .. " Mobile Quick TP",
+            Duration = 3
+        })
+    end,
+})
+
+Window:AddSlider({
+    Title = "Quick TP Distance",
+    Description = "Set the distance for quick teleport",
+    Tab = Physics,
+    AllowDecimals = true,
+    MaxValue = 5,
+    Callback = function(value)
+        tpdistance = value
+    end,
+})
+
+Window:AddToggle({
+    Title = "Anti Block",
+    Description = "Enable or disable anti block",
+    Tab = Physics,
+    Callback = function(state)
+        antiblockon = state
+        Window:Notify({
+            Title = "volt.gg 2.0.0",
+            Description = (state and "Enabled" or "Disabled") .. " Anti Block",
+            Duration = 3
+        })
+    end,
+})
+
+Window:AddToggle({
+    Title = "Anti Jam",
+    Description = "Enable or disable anti jam",
+    Tab = Physics,
     Callback = function(state)
         getgenv().AntiJam = state
-
         Window:Notify({
-            Title = Window.Settings.Title,
-            Description = (state and "Enabled " or "Disabled ") .. "Anti Jam"
+            Title = "volt.gg 2.0.0",
+            Description = (state and "Enabled" or "Disabled") .. " Anti Jam",
+            Duration = 3
         })
 
         local function updateCollisionState()
@@ -781,109 +723,86 @@ sections.physic2:Toggle({
         if getgenv().AntiJam then
             task.spawn(updateCollisionState)
         end
-    end
-}, "AntiJam")
+    end,
+})
 
-sections.physic2:Toggle({
-    Name = "Anti Out of Bounds",
-    Default = false,
+Window:AddToggle({
+    Title = "Anti Out of Bounds",
+    Description = "Enable or disable anti out of bounds protection",
+    Tab = Physics,
     Callback = function(state)
         antiOOB.Value = state
-
         Window:Notify({
-            Title = Window.Settings.Title,
-            Description = (state and "Enabled " or "Disabled ") .. "Anti Out of Bounds"
+            Title = "volt.gg 2.0.0",
+            Description = (state and "Enabled" or "Disabled") .. " Anti Out of Bounds",
+            Duration = 3
         })
 
         for index, boundary in pairs(boundaries) do
             boundary.Parent = not state and workspace.Models.Boundaries or nil
         end
     end,
-}, "AntiOutOfBounds")
+})
 
-local boundaries = {}
-
-if not practice then
-    for index, part in pairs(workspace.Models.Boundaries:GetChildren()) do
-        boundaries[#boundaries + 1] = part
-    end
-end
-
-local function adjustHeads(scaleValue, transparencyValue, thinValue)
-    for _, v in pairs(game.Players:GetPlayers()) do
-        if v ~= player and v.Character and v.Character:FindFirstChild("Head") then
-            local head = v.Character.Head
-            head.Size = Vector3.new(thinValue, scaleValue, thinValue)
-            head.Transparency = transparencyValue
-            if head:FindFirstChild("Mesh") then
-                head.Mesh.Scale = Vector3.new(thinValue, scaleValue, thinValue)
-            end
-        end
-    end
-end
-
-sections.physic3:Toggle({
-    Name = "Enable Head Adjustments",
-    Default = false,
+Window:AddToggle({
+    Title = "Enable Head Adjustments",
+    Description = "Enable or disable head adjustments",
+    Tab = Physics,
     Callback = function(state)
         AdjustHeadsEnabled = state
-
         Window:Notify({
-            Title = Window.Settings.Title,
-            Description = (state and "Enabled " or "Disabled ") .. "Head Adjustments"
+            Title = "volt.gg 2.0.0",
+            Description = (state and "Enabled" or "Disabled") .. " Head Adjustments",
+            Duration = 3
         })
 
         if state then
             adjustHeads(HeadScale, HeadTransparency, HeadThinness)
         end
     end,
-}, "AdjustHeadsEnabled")
+})
 
-sections.physic3:Slider({
-    Name = "Head Scale",
-    Default = 1,
-    Minimum = 1,
-    Maximum = 5,
-    Precision = 1,
+Window:AddSlider({
+    Title = "Head Scale",
+    Description = "Adjust the scale of heads",
+    Tab = Physics,
+    AllowDecimals = true,
+    MaxValue = 5,
     Callback = function(value)
         HeadScale = value
         if AdjustHeadsEnabled then
             adjustHeads(HeadScale, HeadTransparency, HeadThinness)
         end
     end,
-}, "HeadScale")
+})
 
-sections.physic3:Slider({
-    Name = "Head Transparency",
-    Default = 0,
-    Minimum = 0,
-    Maximum = 1,
-    Precision = 2,
+Window:AddSlider({
+    Title = "Head Transparency",
+    Description = "Set the transparency level of heads",
+    Tab = Physics,
+    AllowDecimals = true,
+    MaxValue = 1,
     Callback = function(value)
         HeadTransparency = value
         if AdjustHeadsEnabled then
             adjustHeads(HeadScale, HeadTransparency, HeadThinness)
         end
     end,
-}, "HeadTransparency")
+})
 
-sections.physic3:Slider({
-    Name = "Head Thinness",
-    Default = 1,
-    Minimum = 1,
-    Maximum = 10,
-    Precision = 1,
+Window:AddSlider({
+    Title = "Head Thinness",
+    Description = "Adjust the thinness of heads",
+    Tab = Physics,
+    AllowDecimals = true,
+    MaxValue = 10,
     Callback = function(value)
         HeadThinness = value
         if AdjustHeadsEnabled then
             adjustHeads(HeadScale, HeadTransparency, HeadThinness)
         end
     end,
-}, "HeadThinness")
-
-if AdjustHeadsEnabled then
-    adjustHeads(HeadScale, HeadTransparency, HeadThinness)
-end
+})
 
 
 local a = false
@@ -1272,65 +1191,68 @@ task.spawn(function()
     end
 end)
 
-sections.qb1:Toggle({
-    Name = "QB Aimbot",
-    Default = false,
+Window:AddToggle({
+    Title = "QB Aimbot",
+    Description = "Enable or disable the QB aimbot",
+    Tab = Quarterback,
     Callback = function(state)
         if state then
             a = e
         else
             a = nil
         end
-
         Window:Notify({
-            Title = Window.Settings.Title,
-            Description = (state and "Enabled " or "Disabled ") .. "QB Aimbot"
+            Title = "volt.gg 2.0.0",
+            Description = (state and "Enabled" or "Disabled") .. " QB Aimbot",
+            Duration = 3
         })
     end,
-}, "QBAimbot")
+})
 
-sections.qb1:Slider({
-    Name = "Lead Distance",
-    Default = 0,
-    Minimum = 0,
-    Maximum = 10,
-    Precision = 2,
+Window:AddSlider({
+    Title = "Lead Distance",
+    Description = "Adjust the lead distance for QB aimbot",
+    Tab = Quarterback,
+    AllowDecimals = true,
+    MaxValue = 10,
     Callback = function(value)
         g = value
     end,
-}, "LeadDistance")
+})
 
-sections.qb2:Toggle({
-    Name = "Anti Out of Bounds",
-    Default = false,
+Window:AddToggle({
+    Title = "Anti Out of Bounds",
+    Description = "Enable or disable anti out of bounds protection",
+    Tab = Quarterback,
     Callback = function(state)
         if state then
             c = a
         else
             c = nil
         end
-
         Window:Notify({
-            Title = Window.Settings.Title,
-            Description = (state and "Enabled " or "Disabled ") .. "Anti Out of Bounds"
+            Title = "volt.gg 2.0.0",
+            Description = (state and "Enabled" or "Disabled") .. " Anti Out of Bounds",
+            Duration = 3
         })
     end,
-}, "AntiOutOfBounds")
+})
 
-sections.qb2:Slider({
-    Name = "Anti OOB Threshold",
-    Default = 0,
-    Minimum = 0,
-    Maximum = 10,
-    Precision = 2,
+Window:AddSlider({
+    Title = "Anti OOB Threshold",
+    Description = "Set the threshold for anti out of bounds",
+    Tab = Quarterback,
+    AllowDecimals = true,
+    MaxValue = 10,
     Callback = function(value)
         f = value
     end,
-}, "AntiOOBThreshold")
+})
 
-sections.qb3:Toggle({
-    Name = "Beam/High Power Mode",
-    Default = false,
+Window:AddToggle({
+    Title = "Beam/High Power Mode",
+    Description = "Enable or disable beam/high power mode",
+    Tab = Quarterback,
     Callback = function(state)
         if state then
             if a then
@@ -1339,13 +1261,14 @@ sections.qb3:Toggle({
         else
             b = nil
         end
-
         Window:Notify({
-            Title = Window.Settings.Title,
-            Description = (state and "Enabled " or "Disabled ") .. "Beam/High Power Mode"
+            Title = "volt.gg 2.0.0",
+            Description = (state and "Enabled" or "Disabled") .. " Beam/High Power Mode",
+            Duration = 3
         })
     end,
-}, "BeamHighPowerMode")
+})
+
 
 MacLib:SetFolder("Maclib")
 tabs.Settings:InsertConfigSection("Left")
