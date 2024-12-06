@@ -1,8 +1,8 @@
-if getgenv().volt.gg then
+if getgenv().volt then
     warn("Script already loaded/is loading or errored.")
     return
 end
-getgenv().volt.gg = true
+getgenv().volt = true
 
 loadstring([[
   function LPH_NO_VIRTUALIZE(f) return f end;
