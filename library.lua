@@ -544,7 +544,7 @@ Window:AddToggle({
     end
 })
 
-		
+
 Window:AddSlider({
     Title = "Ball Size",
     Description = "Set the size of the footballs.",
@@ -552,11 +552,11 @@ Window:AddSlider({
     AllowDecimals = true,
     MaxValue = 20,
     Callback = function(value)
-        distance = value
+        distance2 = value
         if _G.BallResize then
             for _, v in pairs(Workspace:GetChildren()) do
                 if v:IsA("BasePart") and v.Name == "Football" then
-                    v.Size = Vector3.new(distance, distance, distance)
+                    v.Size = Vector3.new(distance2, distance2, distance2)
                     v.CanCollide = false
                 end
             end
@@ -1275,3 +1275,49 @@ Window:AddToggle({
     end,
 })
 
+local Keybind = nil
+
+Window:AddKeybind({
+	Title = "Minimize Keybind",
+	Description = "Set the keybind for Minimizing the UI",
+	Tab = Settings,
+	Callback = function(Key) 
+		Window:SetSetting("Keybind", Key)
+	end,
+}) 
+
+Window:AddDropdown({
+	Title = "Set Theme",
+	Description = "Set the theme of the library!",
+	Tab = Settings,
+	Options = {
+		["Light Mode"] = "Light",
+		["Dark Mode"] = "Dark",
+		["Extra Dark"] = "Void",
+	},
+	Callback = function(Theme) 
+		Window:SetTheme(Themes[Theme])
+	end,
+}) 
+
+Window:AddToggle({
+	Title = "UI Blur",
+	Description = "If enabled, must have your Roblox graphics set to 8+ for it to work.",
+	Default = true,
+	Tab = Settings,
+	Callback = function(Boolean) 
+		Window:SetSetting("Blur", Boolean)
+	end,
+}) 
+
+
+Window:AddSlider({
+	Title = "UI Transparency",
+	Description = "Set the transparency of the UI.",
+	Tab = Settings,
+	AllowDecimals = true,
+	MaxValue = 1,
+	Callback = function(Amount) 
+		Window:SetSetting("Transparency", Amount)
+	end,
+}) 
