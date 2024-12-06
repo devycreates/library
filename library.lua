@@ -457,53 +457,65 @@ local function createHitbox(target)
 end
 
 
-local player = game.Players.LocalPlayer
+local armSizeFactor = 1
+local armsResized = false
 
-local function updateArms(size)
-    if player.Character:FindFirstChild('Left Arm') and player.Character:FindFirstChild('Right Arm') then
-        player.Character['Left Arm'].Size = Vector3.new(size, size * 2, size)
-        player.Character['Right Arm'].Size = Vector3.new(size, size * 2, size)
-        player.Character['Left Arm'].Transparency = 0.5
-        player.Character['Right Arm'].Transparency = 0.5
+local function adjustArmSize(part, factor)
+    local originalSize = part.Size
+    local newSize = Vector3.new(originalSize.X, originalSize.Y * factor, originalSize.Z)
+
+    local motor6D = part:FindFirstChildWhichIsA("Motor6D")
+    if motor6D then
+        local originalC0 = motor6D.C0
+        motor6D.C0 = CFrame.new(originalC0.X, newSize.Y / 2, originalC0.Z)
     end
+
+    part.Size = newSize
+end
+
+local function resizeArms(enabled, factor)
+    local character = game.Players.LocalPlayer.Character or game.Players.LocalPlayer.CharacterAdded:Wait()
+    if not character then return end
+
+    local leftArm = character:FindFirstChild("LeftUpperArm") or character:FindFirstChild("Left Arm")
+    local rightArm = character:FindFirstChild("RightUpperArm") or character:FindFirstChild("Right Arm")
+
+    if leftArm then
+        adjustArmSize(leftArm, enabled and factor or 1)
+    end
+    if rightArm then
+        adjustArmSize(rightArm, enabled and factor or 1)
+    end
+
+    armsResized = enabled
 end
 
 Window:AddToggle({
     Title = "Arm Resizer",
-    Description = "Increases your arm length according to the value you set it to.",
-    Tab = Catching,
-    Callback = function(enabled)
-        _G.ArmResizerEnabled = enabled
-        if enabled then
-            updateArms(_G.ArmSize or 2)
-        else
-            if player.Character:FindFirstChild('Left Arm') and player.Character:FindFirstChild('Right Arm') then
-                player.Character['Left Arm'].Size = Vector3.new(1, 2, 1)
-                player.Character['Right Arm'].Size = Vector3.new(1, 2, 1)
-                player.Character['Left Arm'].Transparency = 0
-                player.Character['Right Arm'].Transparency = 0
-            end
-        end
+    Description = "Enable or disable arm resizing",
+    Tab = Main,
+    Callback = function(state)
+        resizeArms(state, armSizeFactor)
         Window:Notify({
-            Title = "volt.gg",
-            Description = (enabled and "Enabled Arm Resizer" or "Disabled Arm Resizer"),
+            Title = "volt.gg 2.0.0",
+            Description = (state and "Enabled Arm Resizer" or "Disabled Arm Resizer"),
             Duration = 5
         })
-    end
+    end,
 })
 
 Window:AddSlider({
     Title = "Arm Size",
-    Description = "Set the size of the arms when the toggle is enabled.",
-    Tab = Catching,
+    Description = "Set the size of the arms",
+    Tab = Main,
     AllowDecimals = true,
     MaxValue = 20,
     Callback = function(value)
-        _G.ArmSize = value
-        if _G.ArmResizerEnabled then
-            updateArms(_G.ArmSize)
+        armSizeFactor = value
+        if armsResized then
+            resizeArms(true, armSizeFactor)
         end
-    end
+    end,
 })
 
 
