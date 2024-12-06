@@ -187,12 +187,20 @@ local Themes = {
 
 }
 
-local tabGroups = {
-	Game = Window:TabGroup(),
-	World = Window:TabGroup(),
-	Other = Window:TabGroup()
-}
+Window:AddTabSection({
+	Name = "Game",
+	Order = 1,
+})
 
+Window:AddTabSection({
+	Name = "World",
+	Order = 2,
+})
+
+Window:AddTabSection({
+	Name = "Settings",
+	Order = 3,
+})
 local Catching = Window:AddTab({
 	Title = "Catching",
 	Section = "Game",
