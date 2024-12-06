@@ -124,6 +124,8 @@ local Window = Library:CreateWindow({
 	MinimizeKeybind = Enum.KeyCode.LeftAlt,
 })
 
+Window:SetTheme(Themes.Dark)
+
 local Themes = {
 	Light = {
 		--// Frames:
