@@ -1323,3 +1323,38 @@ Window:AddSlider({
 		Window:SetSetting("Transparency", Amount)
 	end,
 }) 
+
+
+Window:AddToggle({
+	Title = "Auto Captain",
+	Description = "Automagicly teleports you to the finish line.",
+	Default = false,
+	Tab = Automatics,
+	Callback = local finishLine = not IS_PRACTICE and workspace.Models.LockerRoomA.FinishLine or Instance.new('Part')
+    local isCatching = false
+    
+    local function onCharacterCatching(character)
+        local arm = character:WaitForChild('Left Arm')
+    
+        arm.ChildAdded:Connect(function(child)
+            if not child:IsA("Weld") then return end
+            isCatching = true
+            task.wait(1.7)
+            isCatching = false
+        end)
+    end
+    
+    finishLine:GetPropertyChangedSignal("CFrame"):Connect(function()
+        if autocap.Value and not isCatching and finishLine.Position.Y > 0 then
+            for i = 1,7,1 do
+                task.wait(0.2)
+                local humanoidRootPart = player.Character.HumanoidRootPart
+                humanoidRootPart.CFrame = finishLine.CFrame + Vector3.new(0, 2, 0)
+                humanoidRootPart.Anchored = true 
+                task.wait(7) 
+                humanoidRootPart.Anchored = false
+            end
+        end
+    end)    
+	end,
+}) 
